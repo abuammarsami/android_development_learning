@@ -15,6 +15,8 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.ammar.lma.databinding.ActivityMainBinding;
 import com.ammar.lma.model.Category;
@@ -31,6 +33,12 @@ public class MainActivity extends AppCompatActivity {
     private ActivityMainBinding activityMainBinding;
     private MainActivityClickHandlers clickHandlers;
     private Category selectedCategory;
+
+    // RecyclerView
+    private RecyclerView courseRecyclerView;
+    private CourseAdapter courseAdapter;
+    private ArrayList<Course> coursesList;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,6 +91,29 @@ public class MainActivity extends AppCompatActivity {
         activityMainBinding.setSpinnerAdapter(categoryArrayAdapter);
     }
 
+    // Added for RecyclerView
+    public void LoadCoursesArrayList(int categoryId) {
+        mainActivityViewModel.getCoursesOfSelectedCategory(categoryId).observe(this, new Observer<List<Course>>() {
+            @Override
+            public void onChanged(List<Course> courses) {
+                coursesList = (ArrayList<Course>) courses;
+                // Update the UI
+                LoadRecyclerView();
+            }
+        });
+    }
+
+    // Added for RecyclerView
+    private void LoadRecyclerView() {
+        courseRecyclerView = activityMainBinding.secondaryLayout.recyclerView;
+        courseRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        courseRecyclerView.setHasFixedSize(true);
+
+        courseAdapter = new CourseAdapter();
+        courseRecyclerView.setAdapter(courseAdapter);
+        courseAdapter.setCourses(coursesList);
+    }
+
     public class MainActivityClickHandlers{
         public void onFABClicked(View view) {
             // Handle FAB click
@@ -96,6 +127,9 @@ public class MainActivity extends AppCompatActivity {
             String message = "id is " + selectedCategory.getId() +
                     " \n name is " + selectedCategory.getCategoryName();
             Toast.makeText(parent.getContext(), " "+message, Toast.LENGTH_SHORT).show();
+
+            // Load courses (RecyclerView)
+            LoadCoursesArrayList(selectedCategory.getId());
         }
     }
 }
