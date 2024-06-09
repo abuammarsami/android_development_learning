@@ -1,5 +1,6 @@
 package com.ammar.lma.model;
 
+import androidx.annotation.NonNull;
 import androidx.databinding.BaseObservable;
 import androidx.databinding.Bindable;
 import androidx.databinding.library.baseAdapters.BR;
@@ -58,5 +59,11 @@ public class Category extends BaseObservable{
     public void setCategoryDescription(String categoryDescription) {
         this.categoryDescription = categoryDescription;
         notifyPropertyChanged(BR.categoryDescription);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return this.categoryName;
     }
 }
