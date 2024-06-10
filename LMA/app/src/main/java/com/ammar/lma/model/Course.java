@@ -9,6 +9,8 @@ import androidx.room.ForeignKey;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
+import java.util.Objects;
+
 @Entity(tableName = "courses_table", foreignKeys = @ForeignKey(entity = Category.class,
         parentColumns = "id",
         childColumns = "category_id",
@@ -77,5 +79,21 @@ public class Course extends BaseObservable {
     public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
         notifyPropertyChanged(BR.categoryId);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Course course = (Course) o;
+        return  courseId == course.courseId
+                && categoryId == course.categoryId
+                && Objects.equals(courseName, course.courseName)
+                && Objects.equals(unitPrice, course.unitPrice);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(courseId, courseName, unitPrice, categoryId);
     }
 }

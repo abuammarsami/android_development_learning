@@ -46,19 +46,19 @@ public class MainActivityViewModel extends AndroidViewModel {
         repository.insertCategory(category);
     }
 
-    public void UpdateCourse(Course course) {
+    public void updateCourse(Course course) {
         repository.updateCourse(course);
     }
 
-    public void UpdateCategory(Category category) {
+    public void updateCategory(Category category) {
         repository.updateCategory(category);
     }
 
-    public void DeleteCourse(Course course) {
+    public void deleteCourse(Course course) {
         repository.deleteCourse(course);
     }
 
-    public void DeleteCategory(Category category) {
+    public void deleteCategory(Category category) {
         repository.deleteCategory(category);
     }
 }

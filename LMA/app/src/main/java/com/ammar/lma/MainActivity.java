@@ -1,5 +1,6 @@
 package com.ammar.lma;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -8,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -15,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -38,6 +41,10 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView courseRecyclerView;
     private CourseAdapter courseAdapter;
     private ArrayList<Course> coursesList;
+
+    private static final int ADD_COURSE_REQUEST_CODE = 1;
+    private static final int EDIT_COURSE_REQUEST_CODE = 2;
+    public int selectedCourseId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,12 +119,44 @@ public class MainActivity extends AppCompatActivity {
         courseAdapter = new CourseAdapter();
         courseRecyclerView.setAdapter(courseAdapter);
         courseAdapter.setCourses(coursesList);
+
+        // Edit the Course
+        courseAdapter.setOnItemClickListener(new CourseAdapter.onItemClickListener() {
+            @Override
+            public void onItemClick(Course course) {
+                selectedCourseId = course.getCourseId();
+                Intent intent = new Intent(MainActivity.this, AddEditActivity.class);
+                intent.putExtra(AddEditActivity.COURSE_ID, selectedCourseId);
+                intent.putExtra(AddEditActivity.COURSE_NAME, course.getCourseName());
+                intent.putExtra(AddEditActivity.UNIT_PRICE, course.getUnitPrice());
+                startActivityForResult(intent, EDIT_COURSE_REQUEST_CODE);
+            }
+        });
+
+        // Delete A Course
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                Course courseToDelete = coursesList.get(viewHolder.getAdapterPosition());
+                mainActivityViewModel.deleteCourse(courseToDelete);
+                Toast.makeText(MainActivity.this, "Course Deleted", Toast.LENGTH_SHORT).show();
+            }
+        }).attachToRecyclerView(courseRecyclerView);
     }
 
     public class MainActivityClickHandlers{
         public void onFABClicked(View view) {
             // Handle FAB click
-            Toast.makeText(MainActivity.this, "FAB Clicked", Toast.LENGTH_SHORT).show();
+            // Create the Course
+//            Toast.makeText(MainActivity.this, "FAB Clicked", Toast.LENGTH_SHORT).show();
+            Intent intent = new Intent(MainActivity.this, AddEditActivity.class);
+            startActivityForResult(intent, ADD_COURSE_REQUEST_CODE);
         }
 
         public void onSelectItem(AdapterView<?> parent, View view, int pos, long id) {
@@ -130,6 +169,33 @@ public class MainActivity extends AppCompatActivity {
 
             // Load courses (RecyclerView)
             LoadCoursesArrayList(selectedCategory.getId());
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        int selectedCategoryId = selectedCategory.getId();
+
+        if (requestCode == ADD_COURSE_REQUEST_CODE && resultCode == RESULT_OK) {
+            Course course = new Course();
+            course.setCourseName(data.getStringExtra(AddEditActivity.COURSE_NAME));
+            course.setUnitPrice(data.getStringExtra(AddEditActivity.UNIT_PRICE));
+            course.setCategoryId(selectedCategoryId);
+            mainActivityViewModel.addNewCourse(course);
+            Log.v("TAG", "Inserted" + course.getCourseName());
+            Toast.makeText(this, "Course Saved", Toast.LENGTH_SHORT).show();
+        } else if (requestCode == EDIT_COURSE_REQUEST_CODE && resultCode == RESULT_OK) {
+            Course course = new Course();
+            course.setCourseName(data.getStringExtra(AddEditActivity.COURSE_NAME));
+            course.setUnitPrice(data.getStringExtra(AddEditActivity.UNIT_PRICE));
+            course.setCategoryId(selectedCategoryId);
+            course.setCourseId(selectedCourseId);
+            mainActivityViewModel.updateCourse(course);
+            Toast.makeText(this, "Course Updated", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Course not saved", Toast.LENGTH_SHORT).show();
         }
     }
 }
